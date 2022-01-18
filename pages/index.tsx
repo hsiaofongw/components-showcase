@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "../styles/Home.module.css";
 import { select, arc, scaleLinear, path } from "d3";
-import { startOfToday, endOfToday } from 'date-fns';
+import { startOfToday, endOfToday } from "date-fns";
 
 type Rect = {
   id: string;
@@ -12,12 +12,56 @@ type Rect = {
   rotateDegree: number;
 };
 
+type Pointer = {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotateDegree: number;
+};
+
+class ClockPointerHelper {
+  /** 获取当前时刻的时针、分针和秒针的弧度位置 */
+  public static getCurrentPointerRadians(): {
+    hoursRadian: number;
+    minutesRadian: number;
+    secondsRadian: number;
+  } {
+    const now = new Date();
+    const dayStart = startOfToday();
+    const dayEnd = endOfToday();
+    const todayPassedRatio =
+      (now.valueOf() - dayStart.valueOf()) /
+      (dayEnd.valueOf() - dayStart.valueOf());
+
+    const hoursPerDay = 24; // 每天有这么多小时
+    const minutesPerDay = 24 * 60; // 每天有这么多分钟
+
+    const hoursTotalCircles = 2; // 时针每天转 2 圈
+    const hoursTotalRadians = hoursTotalCircles * 2 * Math.PI; // 时针每天转这么多弧度
+    const minutesTotalCircles = hoursPerDay; // 分针每天转这么多圈
+    const minutesTotalRadians = minutesTotalCircles * 2 * Math.PI; // 分针每天转这么多弧度
+    const secondsTotalCircles = minutesPerDay; // 秒针每天转这么多圈
+    const secondsTotalRadians = secondsTotalCircles * 2 * Math.PI; // 秒针每天总共转这么多弧度
+
+    const currentHoursRadian = hoursTotalRadians * todayPassedRatio; // 当前时针位置（用弧度表示）
+    const currentMinutesRadian = minutesTotalRadians * todayPassedRatio; // 当前分针位置（用弧度表示）
+    const currentSecondsRadian = secondsTotalRadians * todayPassedRatio; // 当前秒针位置（用弧度表示）
+
+    return {
+      hoursRadian: currentHoursRadian,
+      minutesRadian: currentMinutesRadian,
+      secondsRadian: currentSecondsRadian,
+    };
+  }
+}
+
 function HomePage() {
   const svgRef = useRef(null);
 
   useEffect(() => {
     const paintClock = () => {
-
       const arcGenerator = arc();
       const svgElement = svgRef.current as any as SVGElement;
       const box = svgElement.getBoundingClientRect();
@@ -30,13 +74,13 @@ function HomePage() {
         startAngle: 0,
         endAngle: 2 * Math.PI,
       });
-  
+
       select(svgElement)
         .append("path")
         .attr("d", arcPathData)
         .attr("fill", "#000000")
         .style("transform", `translate(${x(0.5)}px, ${y(0.5)}px)`);
-  
+
       const hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
       const angles = hours.map(
         (hour) => hour * ((2 * Math.PI) / 12) + Math.PI / 2
@@ -44,8 +88,10 @@ function HomePage() {
       const rectWidth = thickness;
       const rectHeight = 3 * thickness;
       const rectRightMargin = rectHeight;
-      const radianToDegree = scaleLinear().domain([0, 2 * Math.PI]).range([-90, 270]);
-  
+      const radianToDegree = scaleLinear()
+        .domain([0, 2 * Math.PI])
+        .range([-90, 270]);
+
       const rects: Rect[] = [];
       for (let i = 0; i < hours.length; i++) {
         const id = i.toString();
@@ -57,106 +103,109 @@ function HomePage() {
         const rotateDegree = radianToDegree(angles[i]) % 360;
         const width = rectWidth;
         const height = rectHeight;
-  
+
         const rect: Rect = {
           id,
           rotateDegree,
           xOffset: rectX,
           yOffset: rectY,
           width,
-          height
+          height,
         };
-  
+
         rects.push(rect);
       }
-  
-  
+
       select(svgElement)
         .selectAll("rect.label-tick")
         .data(rects, function getId(datum: any) {
           return datum.id;
         })
-        .join('rect')
+        .join("rect")
         .classed("label-tick", true)
-        .attr('x', d => x(d.xOffset))
-        .attr('y', d => x(d.yOffset))
-        .attr('width', d => x(d.width))
-        .attr('height', d => x(d.height))
-        .style('transform-origin', 'center center')
-        .style('transform', d => `rotate(${d.rotateDegree}deg)`)
-        .attr('stroke', 'none')
-        .attr('fill', '#000000');
-  
-        const now = new Date();
-        const dayStart = startOfToday();
-        const dayEnd = endOfToday();
-        const todayPassedRatio = (now.valueOf() - dayStart.valueOf()) / (dayEnd.valueOf() - dayStart.valueOf());
-  
-        const hoursPerDay = 24;         // 每天有这么多小时
-        const minutesPerDay = 24 * 60;  // 每天有这么多分钟
-  
-        const hoursTotalCircles = 2;                                    // 时针每天转 2 圈
-        const hoursTotalRadians = hoursTotalCircles * 2 * Math.PI;      // 时针每天转这么多弧度
-        const minutesTotalCircles = hoursPerDay;                        // 分针每天转这么多圈
-        const minutesTotalRadians = minutesTotalCircles * 2 * Math.PI;  // 分针每天转这么多弧度
-        const secondsTotalCircles = minutesPerDay;                      // 秒针每天转这么多圈
-        const secondsTotalRadians = secondsTotalCircles * 2 * Math.PI;  // 秒针每天总共转这么多弧度
-  
-        const currentHoursRadian = hoursTotalRadians * todayPassedRatio;       // 当前时针位置（用弧度表示）
-        const currentMinutesRadian = minutesTotalRadians * todayPassedRatio;   // 当前分针位置（用弧度表示）
-        const currentSecondsRadian = secondsTotalRadians * todayPassedRatio;   // 当前秒针位置（用弧度表示）
-  
-        const currentHourDegree = radianToDegree(currentHoursRadian);       // 当前时针位置（用角度表示）
-        const currentMinutsDegree = radianToDegree(currentMinutesRadian);   // 当前分针位置（用角度表示）
-        const currentSecondsDegree = radianToDegree(currentSecondsRadian);  // 当前秒针位置（用角度表示）
-  
-        const pointerThickness = thickness * 2;         // 时针、分针的宽度
-        const pointerXOffset = pointerThickness;        // 时针、分针的正常 x 偏移量
-        const pointerYOffset = pointerThickness * 0.5;  // 时针、分针的正常 y 偏移量
-        const hoursLength = 0.2;                        // 时针长度
-        const minutesLength = 0.28;                     // 分针长度
-  
-        const secondsThickness = thickness * 0.6;       // 秒针的宽度
-        const secondsXOffset = 2 * secondsThickness;    // 秒针的正常 x 偏移量
-        const secondsYOffset = secondsThickness * 0.5;  // 秒针的正常 y 偏移量
-        const secondsLength = 0.36;                     // 秒针的长度
-  
-        // 画时针
-        select(svgElement).selectAll('rect.hours').remove();
-        select(svgElement)
-          .append('rect')
-          .classed('hours', true)
-          .attr('x', x(0.5 - pointerXOffset))
-          .attr('y', x(0.5 - pointerYOffset))
-          .attr('width', x(hoursLength))
-          .attr('height', x(pointerThickness))
-          .style('transform-origin', 'center center')
-          .style('transform', `rotate(${currentHourDegree}deg)`);
-  
-        // 画分针
-        select(svgElement).selectAll('rect.minutes').remove();
-        select(svgElement)
-          .append('rect')
-          .classed('minutes', true)
-          .attr('x', x(0.5 - pointerXOffset))
-          .attr('y', x(0.5 - pointerYOffset))
-          .attr('width', x(minutesLength))
-          .attr('height', x(pointerThickness))
-          .style('transform-origin', 'center center')
-          .style('transform', `rotate(${currentMinutsDegree}deg)`);
-        
-        // 画秒针
-        select(svgElement).selectAll('rect.seconds').remove();
-        select(svgElement)
-          .append('rect')
-          .classed('seconds', true)
-          .attr('x', x(0.5 - secondsXOffset))
-          .attr('y', x(0.5 - secondsYOffset))
-          .attr('width', x(secondsLength))
-          .attr('height', x(secondsThickness))
-          .style('transform-origin', 'center center')
-          .style('transform', `rotate(${currentSecondsDegree}deg)`);
-  
+        .attr("x", (d) => x(d.xOffset))
+        .attr("y", (d) => x(d.yOffset))
+        .attr("width", (d) => x(d.width))
+        .attr("height", (d) => x(d.height))
+        .style("transform-origin", "center center")
+        .style("transform", (d) => `rotate(${d.rotateDegree}deg)`)
+        .attr("stroke", "none")
+        .attr("fill", "#000000");
+
+      const { hoursRadian, minutesRadian, secondsRadian } =
+        ClockPointerHelper.getCurrentPointerRadians();
+
+      const currentHourDegree = radianToDegree(hoursRadian); // 当前时针位置（用角度表示）
+      const currentMinutsDegree = radianToDegree(minutesRadian); // 当前分针位置（用角度表示）
+      const currentSecondsDegree = radianToDegree(secondsRadian); // 当前秒针位置（用角度表示）
+
+      const pointerThickness = thickness * 2; // 时针、分针的宽度
+      const pointerXOffset = pointerThickness; // 时针、分针的正常 x 偏移量
+      const pointerYOffset = pointerThickness * 0.5; // 时针、分针的正常 y 偏移量
+      const hoursLength = 0.2; // 时针长度
+      const minutesLength = 0.28; // 分针长度
+
+      const secondsThickness = thickness * 0.6; // 秒针的宽度
+      const secondsXOffset = 2 * secondsThickness; // 秒针的正常 x 偏移量
+      const secondsYOffset = secondsThickness * 0.5; // 秒针的正常 y 偏移量
+      const secondsLength = 0.36; // 秒针的长度
+
+      const pointers: Pointer[] = [
+        {
+          id: "hoursPointer",
+          x: x(0.5 - pointerXOffset),
+          y: x(0.5 - pointerYOffset),
+          width: x(hoursLength),
+          height: x(pointerThickness),
+          rotateDegree: currentHourDegree,
+        },
+        {
+          id: "minutesPointer",
+          x: x(0.5 - pointerXOffset),
+          y: x(0.5 - pointerYOffset),
+          width: x(minutesLength),
+          height: x(pointerThickness),
+          rotateDegree: currentMinutsDegree,
+        },
+        {
+          id: "secondsPointer",
+          x: x(0.5 - secondsXOffset),
+          y: x(0.5 - secondsYOffset),
+          width: x(secondsLength),
+          height: x(secondsThickness),
+          rotateDegree: currentSecondsDegree,
+        },
+      ];
+
+      // 画时针、分针和秒针
+      select(svgElement)
+        .selectAll("rect.pointers")
+        .data(pointers, function (datum: any) {
+          return datum.id;
+        })
+        .join(
+          (enter) => {
+            return enter
+              .append("rect")
+              .classed("pointers", true)
+              .attr("x", (d) => d.x)
+              .attr("y", (d) => d.y)
+              .attr("width", (d) => d.width)
+              .attr("height", (d) => d.height)
+              .style("transform-origin", "center center")
+              .style("transform", (d) => `rotate(${d.rotateDegree}deg)`);
+          },
+          (update) => {
+            return update
+              .attr("x", (d) => d.x)
+              .attr("width", (d) => d.width)
+              .attr("height", (d) => d.height)
+              .attr("y", (d) => d.y)
+              .style("transform-origin", "center center")
+              .style("transform", (d) => `rotate(${d.rotateDegree}deg)`);
+          },
+          (exit) => exit.remove()
+        );
     };
 
     const startPaintClock = () => {
@@ -167,7 +216,6 @@ function HomePage() {
     };
 
     startPaintClock();
-
   }, []);
 
   return (
