@@ -21,6 +21,11 @@ type Pointer = {
   rotateDegree: number;
 };
 
+type Arc = {
+  id: string;
+  pathData: string;
+};
+
 class ClockPointerHelper {
   /** 获取当前时刻的时针、分针和秒针的弧度位置 */
   public static getCurrentPointerRadians(): {
@@ -75,11 +80,27 @@ function HomePage() {
         endAngle: 2 * Math.PI,
       });
 
+      const arcs: Arc[] = [
+        {
+          id: 'mainArc',
+          pathData: arcPathData ?? '',
+        },
+      ];
+
       select(svgElement)
-        .append("path")
-        .attr("d", arcPathData)
-        .attr("fill", "#000000")
-        .style("transform", `translate(${x(0.5)}px, ${y(0.5)}px)`);
+        .selectAll('path.arc')
+        .data(arcs, function (datum: any) { return datum.id; })
+        .join(
+          enter => {
+            return enter.append('path').classed('arc', true).attr("d", d => d.pathData)
+            .attr("fill", "#000000")
+            .style("transform", `translate(${x(0.5)}px, ${y(0.5)}px)`);
+          },
+          update => {
+            return update.attr("d", d => d.pathData);
+          },
+          exit => exit.remove(),
+        );
 
       const hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
       const angles = hours.map(
@@ -118,19 +139,29 @@ function HomePage() {
 
       select(svgElement)
         .selectAll("rect.label-tick")
-        .data(rects, function getId(datum: any) {
-          return datum.id;
-        })
-        .join("rect")
-        .classed("label-tick", true)
-        .attr("x", (d) => x(d.xOffset))
-        .attr("y", (d) => x(d.yOffset))
-        .attr("width", (d) => x(d.width))
-        .attr("height", (d) => x(d.height))
-        .style("transform-origin", "center center")
-        .style("transform", (d) => `rotate(${d.rotateDegree}deg)`)
-        .attr("stroke", "none")
-        .attr("fill", "#000000");
+        .data(rects, function (datum: any) { return datum.id; })
+        .join(
+          enter => {
+            return enter.append('rect').classed("label-tick", true)
+            .attr("x", (d) => x(d.xOffset))
+            .attr("y", (d) => x(d.yOffset))
+            .attr("width", (d) => x(d.width))
+            .attr("height", (d) => x(d.height))
+            .style("transform-origin", "center center")
+            .style("transform", (d) => `rotate(${d.rotateDegree}deg)`)
+            .attr("stroke", "none")
+            .attr("fill", "#000000");
+          },
+          update => {
+            return update.attr("x", (d) => x(d.xOffset))
+            .attr("y", (d) => x(d.yOffset))
+            .attr("width", (d) => x(d.width))
+            .attr("height", (d) => x(d.height))
+            .style("transform", (d) => `rotate(${d.rotateDegree}deg)`);
+          },
+          exit => exit.remove(),
+        );
+        
 
       const { hoursRadian, minutesRadian, secondsRadian } =
         ClockPointerHelper.getCurrentPointerRadians();
