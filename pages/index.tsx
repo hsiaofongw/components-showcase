@@ -5,6 +5,7 @@ import { select, arc, scaleLinear, Selection } from "d3";
 import { Arc, Pointer, Rect } from "../types/geometry";
 import { ClockPointerHelper } from "../helpers/clock-pointer";
 import { Layer, LayerOption } from "../types/layer";
+import { DegradableAnimator } from "../helpers/degradable-animator";
 
 type AestheticOption = {
   thickness: number;
@@ -254,8 +255,7 @@ function HomePage() {
 
   const thickness = 0.025;
 
-  /** 画表盘和刻度 */
-  useEffect(() => {
+  const paintClockBorderAndTicks = () => {
     const svgElement = svgRef.current as any as SVGElement;
 
     const clockBasicLayer = new ClockBasicLayer();
@@ -263,18 +263,19 @@ function HomePage() {
 
     const clockTickLayer = new ClockTickLayer();
     clockTickLayer.init({ svgElement, data: { thickness } });
+  };
+
+  /** 画表盘和刻度 */
+  useEffect(() => {
+    paintClockBorderAndTicks();
   }, []);
 
   /** 画指针 */
   useEffect(() => {
     const svgElement = svgRef.current as any as SVGElement;
 
-    const paintClock = () => {
-      const { hoursRadian, minutesRadian, secondsRadian } =
-        ClockPointerHelper.getCurrentPointerRadians();
-
-      const position = { hoursRadian, minutesRadian, secondsRadian };
-
+    const paintClockPointer = () => {
+      const position = ClockPointerHelper.getCurrentPointerRadians();
       const clockPointerLayer = new ClockPointerLayer();
       clockPointerLayer.init({
         svgElement,
@@ -282,14 +283,9 @@ function HomePage() {
       });
     };
 
-    const startPaintClock = () => {
-      window.requestAnimationFrame(() => {
-        paintClock();
-        startPaintClock();
-      });
-    };
-
-    startPaintClock();
+    const animator = new DegradableAnimator({ animationProcess: () => paintClockPointer(), totalPerformanceLevel: 1000, defaultPerformanceLevel: 900 });
+    animator.start();
+    
   }, []);
 
   return (
