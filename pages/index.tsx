@@ -283,9 +283,11 @@ function HomePage() {
       });
     };
 
-    const animator = new DegradableAnimator({ animationProcess: () => paintClockPointer(), totalPerformanceLevel: 1000, defaultPerformanceLevel: 900 });
+    const animator = new DegradableAnimator({
+      animationProcess: () => paintClockPointer(),
+      windowLengthMs: 1000,
+    });
     animator.start();
-    
   }, []);
 
   return (

@@ -1,7 +1,6 @@
 export type AnimatorInitializingOption = {
   animationProcess: () => void;     // 动画函数
-  totalPerformanceLevel: number;    // 正数
-  defaultPerformanceLevel: number;  // 在 0 到 totalPerformanceLevel - 1 之间（包括）的整数
+  windowLengthMs: number;  // 窗口长度，单位 ms, 可以为浮点数
 }
 
 export class DegradableAnimator {
@@ -9,34 +8,29 @@ export class DegradableAnimator {
   /** 动画函数 */
   private _animationProcess = () => {};
 
-  /** 总性能等级数 */
-  public totalPerformanceLevel = 0;
-
-  /** 当前性能等级 */
-  public currentPerformanceLevel = 0;
+  /** 窗口长度 */
+  public windowLengthMs = 1;
 
   constructor(opt: AnimatorInitializingOption) {
     this._animationProcess = opt.animationProcess;
-    this.totalPerformanceLevel = opt.totalPerformanceLevel;
-    this.currentPerformanceLevel = opt.defaultPerformanceLevel;
+    this.windowLengthMs = opt.windowLengthMs;
   }
 
   public start(): void {
     const animator = this;
-    let frameId = 0;
+    let lastPaintWindowId: number | undefined = undefined;
+    const startedAt = new Date().valueOf();
     const _startAnimate = () => {
       window.requestAnimationFrame(() => {
-        // console.debug(`frameId: ${frameId}`);
-
-        const gap = (animator.totalPerformanceLevel-1) - animator.currentPerformanceLevel;
-        const mod = gap + 1;
-
-        if (frameId === 0) {
-          // console.debug('re-paint');
+        const now = new Date().valueOf();
+        const windowId = Math.floor((now - startedAt)/animator.windowLengthMs);
+        // console.debug(`windowId: ${windowId}, lastWindowId: ${lastPaintWindowId}, windowLen: ${animator.windowLengthMs}`);
+        if (windowId !== lastPaintWindowId) {
           animator._animationProcess();
+          // console.debug('paint');
         }
 
-        frameId = (frameId + 1) % mod;
+        lastPaintWindowId = windowId;
         _startAnimate();
       });
     };
