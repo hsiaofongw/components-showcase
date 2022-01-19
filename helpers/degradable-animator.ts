@@ -11,23 +11,42 @@ export class DegradableAnimator {
   /** 窗口长度 */
   public windowLengthMs = 1;
 
+  /** 人为设定的理论帧率上限, 单位 fps */
+  public get theoreticalFramerateUpperBoundBySetting(): number {
+    return 1000 / this.windowLengthMs;
+  }
+
+  /** 系统帧 ID */
+  private _systemFrameId = 0;
+  public get systemFrameId(): number {
+    return this._systemFrameId;
+  }
+
+  /** 实际帧 ID */
+  private _actualFrameId = 0;
+  public get actualFrameId(): number {
+    return this._actualFrameId;
+  }
+
   constructor(opt: AnimatorInitializingOption) {
     this._animationProcess = opt.animationProcess;
     this.windowLengthMs = opt.windowLengthMs;
   }
 
   public start(): void {
-    const animator = this;
+
     let lastPaintWindowId: number | undefined = undefined;
     const startedAt = new Date().valueOf();
     const _startAnimate = () => {
       window.requestAnimationFrame(() => {
+        this._statSystemFrame();
+
         const now = new Date().valueOf();
-        const windowId = Math.floor((now - startedAt)/animator.windowLengthMs);
-        // console.debug(`windowId: ${windowId}, lastWindowId: ${lastPaintWindowId}, windowLen: ${animator.windowLengthMs}`);
+        const windowId = Math.floor((now - startedAt)/this.windowLengthMs);
         if (windowId !== lastPaintWindowId) {
-          animator._animationProcess();
-          // console.debug('paint');
+          this._animationProcess();
+
+          this._statActualFrame();
         }
 
         lastPaintWindowId = windowId;
@@ -36,6 +55,14 @@ export class DegradableAnimator {
     };
 
     _startAnimate();
+  }
+
+  private _statActualFrame(): void {
+    this._actualFrameId = this._actualFrameId + 1;
+  }
+
+  private _statSystemFrame(): void {
+    this._systemFrameId = this._systemFrameId + 1;
   }
 
 }

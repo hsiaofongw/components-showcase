@@ -6,6 +6,7 @@ import { Arc, Pointer, Rect } from "../types/geometry";
 import { ClockPointerHelper } from "../helpers/clock-pointer";
 import { Layer, LayerOption } from "../types/layer";
 import { DegradableAnimator } from "../helpers/degradable-animator";
+import { interval } from "rxjs";
 
 type AestheticOption = {
   thickness: number;
@@ -285,9 +286,35 @@ function HomePage() {
 
     const animator = new DegradableAnimator({
       animationProcess: () => paintClockPointer(),
-      windowLengthMs: 1000,
+      windowLengthMs: 1500,
     });
+
     animator.start();
+
+    const frameRateCalculateIntervalMs = 5000;
+
+    // 上次系统帧读数
+    let lastSysFrameId = 0;
+
+    // 上次实际帧度数
+    let lastActualFrameId = 0;
+
+    interval(frameRateCalculateIntervalMs).subscribe(() => {
+      const systemFrameIdIncreased = animator.systemFrameId - lastSysFrameId;
+      lastSysFrameId = animator.systemFrameId;
+
+      const systemFrameRate = (systemFrameIdIncreased / (frameRateCalculateIntervalMs/1000));
+
+      const actualFrameIdIncreased = animator.actualFrameId - lastActualFrameId;
+      lastActualFrameId = animator.actualFrameId;
+
+      const actualFrameRate = (actualFrameIdIncreased / (frameRateCalculateIntervalMs/1000));
+
+      const theoreticalUpperBound = animator.theoreticalFramerateUpperBoundBySetting;
+
+      const now = new Date().valueOf();
+      console.debug(`时间戳：${now}\n极限帧率：${systemFrameRate.toFixed(0)} fps\n实际帧率：${actualFrameRate.toFixed(0)} fps\n理论帧率上限：${theoreticalUpperBound.toFixed(0)}fps`);
+    })
   }, []);
 
   return (
