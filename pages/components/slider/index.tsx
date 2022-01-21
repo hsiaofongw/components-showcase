@@ -3,24 +3,25 @@ import { from, fromEvent } from "rxjs";
 import styles from "./SliderComponent.module.css";
 
 function SliderComponent() {
-  const [isMouseDown, setIsMouseDown] = useState(false);          // 记录鼠标是否按下
-  const [buttonOffsetX, setButtonOffsetX] = useState(0);          // 按钮当前的 offsetX
-  const [buttonDownOffsetX, setButtonDownOffsetX] = useState(0);  // 按钮按下时的 offsetX
-  const [mouseDownX, setMouseDownX] = useState(0);                // 鼠标按下时的 offsetX
-  const [mouseCurrentX, setMouseCurrentX] = useState(0);          // 鼠标按下并移动时的 offsetX
-  const [mouseDeltaX, setMouseDeltaX] = useState(0);              // 鼠标移动时的 delta OffsetX
-  const [maximumButtonX, setMaximumButtonX] = useState(0);        // 最大允许的 buttonOffsetX
+  const [ isMouseDown,       setIsMouseDown       ] = useState(false);  // 记录鼠标是否按下
+  const [ buttonOffsetX,     setButtonOffsetX     ] = useState(0);      // 按钮当前的 offsetX
+  const [ buttonDownOffsetX, setButtonDownOffsetX ] = useState(0);      // 按钮按下时的 offsetX
+  const [ mouseDownX,        setMouseDownX        ] = useState(0);      // 鼠标按下时的 offsetX
+  const [ mouseCurrentX,     setMouseCurrentX     ] = useState(0);      // 鼠标按下并移动时的 offsetX
+  const [ mouseDeltaX,       setMouseDeltaX       ] = useState(0);      // 鼠标移动时的 delta OffsetX
+  const [ maximumButtonX,    setMaximumButtonX    ] = useState(0);      // 最大允许的 buttonOffsetX
 
   // 尝试获取 container 的宽, 设定 button 的允许移动范围
   const containerRef = useRef(null);
-  const buttonRef = useRef(null);
+  const buttonRef    = useRef(null);
+
   useEffect(() => {
     if ((containerRef?.current !== null) && (buttonRef?.current !== null)) {
       const containerElement = containerRef.current as HTMLElement;
       const buttonElement = buttonRef.current as HTMLElement;
       const buttonBox = buttonElement.getBoundingClientRect();
       const maximumAllowButtonX = containerElement.clientWidth - buttonBox.width
-      console.log({ set: maximumAllowButtonX });
+      // console.log({ set: maximumAllowButtonX });
       setMaximumButtonX(maximumAllowButtonX);
     }
   }, [containerRef, buttonRef, maximumButtonX])
