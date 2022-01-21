@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { from, fromEvent } from "rxjs";
 import styles from "./SliderComponent.module.css";
 
@@ -9,6 +9,23 @@ function SliderComponent() {
   const [mouseDownX, setMouseDownX] = useState(0);                // 鼠标按下时的 offsetX
   const [mouseCurrentX, setMouseCurrentX] = useState(0);          // 鼠标按下并移动时的 offsetX
   const [mouseDeltaX, setMouseDeltaX] = useState(0);              // 鼠标移动时的 delta OffsetX
+  const [maximumButtonX, setMaximumButtonX] = useState(0);        // 最大允许的 buttonOffsetX
+  const [buttonWidth, setButtonWidth] = useState(0);              // 该变量记录了 button 的宽
+
+  // 尝试获取 container 的宽, 设定 button 的允许移动范围
+  const containerRef = useRef(null);
+  const buttonRef = useRef(null);
+  useEffect(() => {
+    if ((containerRef?.current !== null) && (buttonRef?.current !== null)) {
+      const containerElement = containerRef.current as HTMLElement;
+      const containerBox = containerElement.getBoundingClientRect();
+      const buttonElement = buttonRef.current as HTMLElement;
+      const buttonBox = buttonElement.getBoundingClientRect();
+      const maximumAllowButtonX = containerBox.width - buttonBox.width
+      console.log({ set: maximumAllowButtonX });
+      setMaximumButtonX(maximumAllowButtonX);
+    }
+  }, [containerRef, buttonRef, maximumButtonX])
 
   function onMouseDown(mouseEvent: MouseEvent) {
     setIsMouseDown(true);
@@ -16,6 +33,7 @@ function SliderComponent() {
     setButtonDownOffsetX(buttonOffsetX);  // 记录按下按钮时按钮的位置
   }
 
+  // 这个 effect 做的主要是注册 mouseMove 事件处理例程序
   useEffect(() => {
     function onMouseMove(mouseEvent: MouseEvent) {
       if (!isMouseDown) {
@@ -26,7 +44,15 @@ function SliderComponent() {
       setMouseCurrentX(currentMouseX);
       const mouseDeltaX = currentMouseX - mouseDownX;
       setMouseDeltaX(mouseDeltaX);
-      setButtonOffsetX(buttonDownOffsetX+mouseDeltaX);
+
+      /**
+       * 移动时，更新 button 位置，更新法则为：
+       * buttonOffsetX <- max(buttonDownOffsetX + mouseDeltaX, 0), min
+       */
+
+      const _buttonOffsetX0 = buttonDownOffsetX+mouseDeltaX;
+
+      setButtonOffsetX(Math.min(Math.max(0, _buttonOffsetX0), maximumButtonX));  
     }
 
     const globalMouseMoveSubscription = fromEvent(
@@ -40,8 +66,9 @@ function SliderComponent() {
     return () => {
       globalMouseMoveSubscription.unsubscribe();
     };
-  }, [isMouseDown, mouseDownX, buttonDownOffsetX]);
+  }, [isMouseDown, mouseDownX, buttonDownOffsetX, maximumButtonX]);
 
+  // 这个 effect 做的主要是注册 mouseUp 事件处理例程
   useEffect(() => {
     const globalMouseUpSubscription = fromEvent(
       window.document,
@@ -55,37 +82,48 @@ function SliderComponent() {
     };
   }, []);
 
+  // return 定义了视图模板
   return (
     <div>
-      <div
-        onMouseDown={(event) => onMouseDown(event as any)}
-        className={styles.sliderButton}
-        style={{position:'relative',left:`${buttonOffsetX}px`}}
-      ></div>
-      <div>
-        <span>mouseDown:</span>
-        <span>{isMouseDown.toString()}</span>
+
+      {/* 按钮容器 */}
+      <div className={styles.buttonContainer} ref={containerRef}>
+        <div
+          ref={buttonRef}
+          onMouseDown={(event) => onMouseDown(event as any)}
+          className={styles.sliderButton}
+          style={{position:'relative',left:`${buttonOffsetX}px`}}
+        ></div>
       </div>
+
+      {/* 统计信息容器 */}
       <div>
-        <span>mouseDownX:</span>
-        <span>{mouseDownX.toString()}</span>
+        <div>
+          <span>mouseDown:</span>
+          <span>{isMouseDown.toString()}</span>
+        </div>
+        <div>
+          <span>mouseDownX:</span>
+          <span>{mouseDownX.toString()}</span>
+        </div>
+        <div>
+          <span>mouseCurrentX:</span>
+          <span>{mouseCurrentX.toString()}</span>
+        </div>
+        <div>
+          <span>mouseDeltaX:</span>
+          <span>{mouseDeltaX.toString()}</span>
+        </div>
+        <div>
+          <span>buttonDownX:</span>
+          <span>{buttonDownOffsetX}</span>
+        </div>
+        <div>
+          <span>buttonX</span>
+          <span>{buttonOffsetX}</span>
+        </div>
       </div>
-      <div>
-        <span>mouseCurrentX:</span>
-        <span>{mouseCurrentX.toString()}</span>
-      </div>
-      <div>
-        <span>mouseDeltaX:</span>
-        <span>{mouseDeltaX.toString()}</span>
-      </div>
-      <div>
-        <span>buttonDownX:</span>
-        <span>{buttonDownOffsetX}</span>
-      </div>
-      <div>
-        <span>buttonX</span>
-        <span>{buttonOffsetX}</span>
-      </div>
+
     </div>
   );
 }

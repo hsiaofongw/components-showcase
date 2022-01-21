@@ -1,6 +1,13 @@
 .sliderButton {
   background-color: #ccc;
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   cursor: pointer;
+  border-radius: 100%;
+}
+
+.buttonContainer {
+  width: 400px;
+  overflow: hidden;
+  border: 1px solid #ccc;
 }
