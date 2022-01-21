@@ -10,7 +10,6 @@ function SliderComponent() {
   const [mouseCurrentX, setMouseCurrentX] = useState(0);          // 鼠标按下并移动时的 offsetX
   const [mouseDeltaX, setMouseDeltaX] = useState(0);              // 鼠标移动时的 delta OffsetX
   const [maximumButtonX, setMaximumButtonX] = useState(0);        // 最大允许的 buttonOffsetX
-  const [buttonWidth, setButtonWidth] = useState(0);              // 该变量记录了 button 的宽
 
   // 尝试获取 container 的宽, 设定 button 的允许移动范围
   const containerRef = useRef(null);
@@ -18,10 +17,9 @@ function SliderComponent() {
   useEffect(() => {
     if ((containerRef?.current !== null) && (buttonRef?.current !== null)) {
       const containerElement = containerRef.current as HTMLElement;
-      const containerBox = containerElement.getBoundingClientRect();
       const buttonElement = buttonRef.current as HTMLElement;
       const buttonBox = buttonElement.getBoundingClientRect();
-      const maximumAllowButtonX = containerBox.width - buttonBox.width
+      const maximumAllowButtonX = containerElement.clientWidth - buttonBox.width
       console.log({ set: maximumAllowButtonX });
       setMaximumButtonX(maximumAllowButtonX);
     }
