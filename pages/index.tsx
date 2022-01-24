@@ -286,7 +286,7 @@ function HomePage() {
 
     const animator = new DegradableAnimator({
       animationProcess: () => paintClockPointer(),
-      windowLengthMs: 1500,
+      windowLengthMs: 1000,
     });
 
     animator.start();
