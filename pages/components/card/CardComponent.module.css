@@ -1,19 +1,52 @@
 .card {
   height: 260px;
+  width: 260px;
   box-shadow: 0px 0px 6px 0px #ccc;
   cursor: pointer;
   transition-property: box-shadow;
   transition-duration: 400ms;
+  display: flex;
+  flex-direction: column;
 }
 
 .card:hover {
-  box-shadow: 0px 0px 10px 0px #ccc;
+  box-shadow: 0px 0px 14px 0px #ccc;
 }
 
 .card:active {
   box-shadow: 0px 0px 4px 0px #ccc;
 }
 
+.imageContainer {
+  height: 160px;
+  width: 100%;
+  overflow: hidden;
+}
+
 .cardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.descriptionArea {
+  overflow: hidden;
+  padding: 10px;
+  box-sizing: border-box;
+  flex: 1;
+  color: #4e5358;
+}
+
+.myL2Heading {
+  margin: 0;
+  font-weight: normal;
+  font-family: Roboto-Regular;
   
+}
+
+.myParagraph {
+  margin: 0;
+  font-family: NotoSansSC-Regular;
+  font-weight: normal;
+
 }

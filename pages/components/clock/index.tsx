@@ -61,7 +61,7 @@ class ClockBasicLayer implements Layer<AestheticOption> {
             .append("path")
             .classed("arc", true)
             .attr("d", (d) => d.pathData)
-            .attr("fill", "#000000")
+            .attr("fill", "#4e5358")
             .style("transform", `translate(${x(0.5)}px, ${y(0.5)}px)`);
         },
         (update) => {
@@ -138,7 +138,7 @@ class ClockTickLayer implements Layer<AestheticOption> {
             .style("transform-origin", "center center")
             .style("transform", (d) => `rotate(${d.rotateDegree}deg)`)
             .attr("stroke", "none")
-            .attr("fill", "#000000");
+            .attr("fill", "#4e5358");
         },
         (update) => {
           return update
@@ -231,6 +231,7 @@ class ClockPointerLayer implements Layer<ClockLayerOption> {
             .attr("width", (d) => d.width)
             .attr("height", (d) => d.height)
             .style("transform-origin", "center center")
+            .attr("fill", "#4e5358")
             .style("transform", (d) => `rotate(${d.rotateDegree}deg)`);
         },
         (update) => {

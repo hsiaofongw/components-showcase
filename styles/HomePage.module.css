@@ -1,7 +1,8 @@
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 260px);
+  display: flex;
   column-gap: 20px;
+  row-gap: 20px;
+  flex-wrap: wrap;
 }
 
 .gridOuterContainer {
