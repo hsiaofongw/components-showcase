@@ -18,7 +18,7 @@ function HomePage() {
       name: "clock",
       url: "/components/clock",
       imageSrc: "/images/real-clock.png",
-      description: "一个时钟，支持自定义帧率",
+      description: "一个时钟",
     },
     {
       id: 1,
